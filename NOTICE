@@ -1,0 +1,9 @@
+AI-aide-de-camp
+Copyright 2025 Qing Kong.
+Licensed under AGPL-3.0 License.
+
+Third-party components:
+- sentence-transformers  
+  Copyright 2025 UKPLab.
+  Licensed under Apache-2.0.  
+  Source: https://github.com/UKPLab/sentence-transformers
