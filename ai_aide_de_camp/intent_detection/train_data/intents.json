@@ -1,0 +1,26 @@
+[
+    {
+        "intent": "chatting",
+        "examples": [
+            "你好",
+            "早上好",
+            "你是谁"
+        ]
+    },
+    {
+        "intent": "weather",
+        "examples": [
+            "今天天气怎么样",
+            "告诉我今天多少度",
+            "现在下雨吗"
+        ]
+    },
+    {
+        "intent": "image processing",
+        "examples": [
+            "帮我裁剪一下图片",
+            "调整图片大小",
+            "处理一下图片"
+        ]
+    }
+]
