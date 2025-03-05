@@ -13,22 +13,7 @@ See the GNU General Public License for more details.
 You should have received a copy of the GNU General Public License along with AI-aide-de-camp.
 If not, see <https://www.gnu.org/licenses/>.
 """
-from sentence_transformers import SentenceTransformer, InputExample, losses
-from torch.utils.data import DataLoader
-import json
-import os
 
-model = SentenceTransformer("./paraphrase-multilingual-mpnet-base-v2")
-sentences = [
-    "The weather is lovely today.",
-    "It's so sunny outside!",
-    "He drove to the stadium.",
-]
-
-embeddings = model.encode(sentences)
-print(embeddings.shape)
-similarities = model.similarity(embeddings, embeddings)
-print(similarities)
 
 
 if __name__ == "main":

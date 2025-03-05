@@ -13,17 +13,3 @@ See the GNU General Public License for more details.
 You should have received a copy of the GNU General Public License along with AI-aide-de-camp.
 If not, see <https://www.gnu.org/licenses/>.
 """
-
-from model import IntentDetectionModel
-from ai_aide_de_camp import config
-
-if __name__ == "__main__":
-    # Initialize the trainer
-    trainer = IntentDetectionModel(
-        pretrained_model_path=config.pretrain_model_path,
-        finetuned_model_path=config.finetune_model_path,
-        intents_path=config.intents_data_path
-    )
-
-    # Fine-tune the model
-    trainer.fine_tune(batch_size=8, num_epochs=1, warmup_steps=10)

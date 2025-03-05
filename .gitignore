@@ -1,3 +1,4 @@
-.idea/
-models/
+/ai_aide_de_camp/intent_detection/sentence_bert/models/
+/ai_aide_de_camp/intent_detection/sentence_bert/checkpoints/
 .venv/
+.idea/

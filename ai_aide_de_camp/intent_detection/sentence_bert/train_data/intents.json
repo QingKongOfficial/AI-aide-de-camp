@@ -16,11 +16,19 @@
         ]
     },
     {
-        "intent": "image processing",
+        "intent": "image_processing",
         "examples": [
             "帮我裁剪一下图片",
             "调整图片大小",
             "处理一下图片"
+        ]
+    },
+    {
+        "intent": "text_to_audio",
+        "examples": [
+            "根据我的文字生成语音",
+            "生成一段语音",
+            "把这段话变成人声"
         ]
     }
 ]

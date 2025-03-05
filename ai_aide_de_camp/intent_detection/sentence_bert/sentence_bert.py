@@ -14,63 +14,27 @@ You should have received a copy of the GNU General Public License along with AI-
 If not, see <https://www.gnu.org/licenses/>.
 """
 # -*- coding: utf-8 -*-
-import os
-import json
-from tqdm.auto import tqdm
-import torch
 from sentence_transformers import SentenceTransformer, InputExample, losses, util, SentencesDataset
-from torch.utils.data import DataLoader
-import numpy as np
-from typing import List, Dict, Tuple
-import json
-from itertools import combinations
-from torch.utils.data import DataLoader
-import torch
-import faiss
-from sentence_transformers import SentenceTransformer, InputExample, losses
-from ai_aide_de_camp import config
+import ai_aide_de_camp.config as config
+from ai_aide_de_camp.intent_detection.sentence_bert.dataloader import DataLoaderHelper
 
-
-class IntentDetectionModel:
-    def __init__(self, pretrained_model_path, finetuned_model_path, intents_path):
+class SentenceBertTrainer:
+    def __init__(self, base_model_path, finetuned_model_path, intents_path):
         """
         Initialize the SentenceBERT trainer
 
         Args:
-            pretrained_model_path (str): Path to the pretrained model
+            base_model_path (str): Path to the pretrained model
             finetuned_model_path (str): Path to save the finetuned model
             intents_path (str): Path to the intents.json file
         """
-        self.pretrained_model_path = pretrained_model_path
+        self.base_model_path = base_model_path
         self.finetuned_model_path = finetuned_model_path
         self.intents_path = intents_path
         self.model = None
         self.index = None
         self.sentences = []
         self.intent_mapping = {}
-
-    def load_training_data(self):
-        """Load and prepare training data from intents.json"""
-        with open(self.intents_path, "r", encoding="utf-8") as f:
-            intents = json.load(f)
-
-        train_examples = []
-        # Keep track of sentences and their intents for FAISS
-        sentence_id = 0
-
-        for intent in intents:
-            examples = intent["examples"]
-            # Store sentences and their intent mappings
-            for example in examples:
-                self.sentences.append(example)
-                self.intent_mapping[sentence_id] = intent["intent"]
-                sentence_id += 1
-
-            # Generate all pairwise combinations for training
-            for s1, s2 in combinations(examples, 2):
-                train_examples.append(InputExample(texts=[s1, s2]))
-
-        return train_examples
 
     def fine_tune(self, batch_size=8, num_epochs=1, warmup_steps=10):
         """
@@ -82,11 +46,11 @@ class IntentDetectionModel:
             warmup_steps (int): Number of warmup steps
         """
         # Load model
-        self.model = SentenceTransformer(self.pretrained_model_path)
+        self.model = SentenceTransformer(self.base_model_path)
 
-        # Prepare training data
-        train_examples = self.load_training_data()
-        train_dataloader = DataLoader(train_examples, shuffle=True, batch_size=batch_size)
+        # Instantiate DataLoaderHelper to get the dataloader
+        data_loader_helper = DataLoaderHelper(self.intents_path, batch_size)
+        train_dataloader = data_loader_helper.get_dataloader()
 
         # Define loss function
         train_loss = losses.MultipleNegativesRankingLoss(self.model)
@@ -103,5 +67,15 @@ class IntentDetectionModel:
         print(f"Fine-tuned model saved to {self.finetuned_model_path}")
 
 
+
 if __name__ == "__main__":
-    pass
+
+    # Initialize the trainer
+    trainer = SentenceBertTrainer(
+        base_model_path=config.SB_BASE_PATH,
+        finetuned_model_path=config.SB_FINETUNED_PATH,
+        intents_path=config.INTENT_DATA
+    )
+
+    # Fine-tune the model
+    trainer.fine_tune(batch_size=8, num_epochs=1, warmup_steps=10)
