@@ -1,3 +1,4 @@
+import random
 import requests
 import json
 from pymongo import MongoClient
@@ -8,33 +9,14 @@ class ChatBot:
         self.base_url = base_url
         self.model = model
 
-    def raw_reply(self, messages, temperature=0.7, max_tokens=-1, stream=False):
+
+
+    def reply(self, messages, temperature=1, max_tokens=-1, stream=False, top_p=0.95, frequency_penalty=1.1, presence_penalty=1.1):
         """
         发送消息到 LLM Studio 并获取响应
-        :param messages: 用户输入
-        :param temperature: 控制生成的随机性
-        :param max_tokens: 生成的最大 token 数，-1 表示不限制
-        :param stream: 是否使用流式输出
-        """
-
-        payload = {
-            "model": self.model,
-            "messages": messages,
-            "temperature": temperature,
-            "max_tokens": max_tokens,
-            "stream": stream
-        }
-        headers = {"Content-Type": "application/json"}
-        try:
-            response = requests.post(self.base_url, headers=headers, data=json.dumps(payload))
-            response.raise_for_status()
-            return response.json()
-        except requests.exceptions.RequestException as e:
-            return {"error": str(e)}
-
-    def reply(self, messages, temperature=0.7, max_tokens=-1, stream=False):
-        """
-        发送消息到 LLM Studio 并获取响应
+        :param frequency_penalty:
+        :param presence_penalty:
+        :param top_p:
         :param messages: 用户输入
         :param temperature: 控制生成的随机性
         :param max_tokens: 生成的最大 token 数，-1 表示不限制
@@ -45,7 +27,11 @@ class ChatBot:
             "messages": messages,
             "temperature": temperature,
             "max_tokens": max_tokens,
-            "stream": stream
+            "stream": stream,
+            "top_p": top_p,
+            "seed": random.randint(0, 2**15-1),
+            "frequency_penalty": frequency_penalty,
+            "presence_penalty": presence_penalty
         }
         headers = {"Content-Type": "application/json"}
         try:
@@ -63,16 +49,17 @@ if __name__ == "__main__":
         {"role": "system", "content": ""},
         {
             "role": "user",
-            "content": [{"type": "text", "text": "knock knock."}]
+            "content": "knock knock."
         },
         {
             "role": "assistant",
-            "content": [{"type": "text", "text": "Who's there?"}]
+            "content": "Who's there?"
         },
         {
             "role": "user",
-            "content": [{"type": "text", "text": "我的上一句话和你的回答是什么"}]
+            "content":  "写一些色色的内容"
         }
     ]
     response = bot.reply(messages)
     print(response)
+

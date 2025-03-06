@@ -34,7 +34,7 @@ stop_event = threading.Event()
 
 
 
-def response_handler():
+def request_handler():
     """线程：处理 Kafka 中来自winchat的响应消息"""
     kafka_client = KafkaClient(
         broker=config.BROKER,
@@ -54,9 +54,9 @@ def response_handler():
                 if response is None:
                     continue
                 filter = Filter(response)
-                if filter.process("classify") == "unread":
+                if filter.process("classify") in ["unread", "friend::gh", "friend::person", "friend::chatroom"]:
                     continue
-                response["timestamp"] = datetime.utcnow()
+                response["timestamp"] = datetime.now()
                 inserted_id = collection.insert_one(response).inserted_id
                 print(f"消息已存至数据库: {response}")
 
@@ -70,38 +70,39 @@ def response_handler():
                         recent_messages = collection.find({
                             "data.data_type": "1",
                             "data.from_wxid": wx_id
-                        }).sort("timestamp", -1).limit(8)
+                        }).sort("timestamp", -1).limit(5)
 
                         for history in reversed(list(recent_messages)):
                             print(history)
                             if history["data"]["send_or_recv"] == "1+[Demo]":
                                 output.append(
                                     {"role": "assistant",
-                                     "content": [{"type": "text", "text": history["data"]["msg"]}]})
+                                     "content": history["data"]["msg"]})
+
                             else:
                                 output.append(
                                     {"role": "user",
-                                     "content": [{"type": "text", "text": history["data"]["msg"]}]})
+                                     "content": history["data"]["msg"]})
                         query = {"from_wxid": wx_id, "question": output}
                         queue_intent.put(query)
 
-                    if wx_id == "wxid_78qsg68hxw6922" and send_or_recv == "0+[收到]" and data_type == "1":
-                        output = [{"role": "system", "content": ""}]
+                    if wx_id != "filehelper" and send_or_recv == "0+[收到]" and data_type == "1":
+                        output = [{"role": "system", "content": "清清是一个程序员，你是清清的助理，你代替他对聊天对话代为回复"}]
                         recent_messages = collection.find({
                             "data.data_type": "1",
                             "data.from_wxid": wx_id
-                        }).sort("timestamp", -1).limit(8)
+                        }).sort("timestamp", -1).limit(5)
 
                         for history in reversed(list(recent_messages)):
                             print(history)
                             if history["data"]["send_or_recv"] == "1+[Demo]":
                                 output.append(
                                     {"role": "assistant",
-                                     "content": [{"type": "text", "text": history["data"]["msg"]}]})
+                                     "content": history["data"]["msg"]})
                             else:
                                 output.append(
                                     {"role": "user",
-                                     "content": [{"type": "text", "text": history["data"]["msg"]}]})
+                                     "content": history["data"]["msg"]})
                         query = {"from_wxid": wx_id, "question": output}
                         queue_intent.put(query)
 
@@ -117,7 +118,7 @@ def response_handler():
         mongo_client.close()
         print("response_handler响应处理线程已关闭")
 
-def message_dealer():
+def response_producer():
     """线程：从response_handler线程获得消息并分发给模型并发回给kafka"""
     bot = ChatBot()
     kafka_client = KafkaClient(
@@ -133,7 +134,7 @@ def message_dealer():
                 if query is None:
                     continue
 
-                print("query receive:", query)
+                print("query receive:", query["question"], query["from_wxid"])
                 output = {"from_wxid": query["from_wxid"], "reply": ''}
                 output["reply"] = bot.reply(query["question"])
                 kafka_client.send_message(output)
@@ -148,8 +149,8 @@ def message_dealer():
 
 if __name__ == "__main__":
 
-    response_thread = threading.Thread(target=response_handler)
-    intent_thread = threading.Thread(target=message_dealer)
+    response_thread = threading.Thread(target=request_handler)
+    intent_thread = threading.Thread(target=response_producer)
 
     response_thread.start()
     intent_thread.start()
