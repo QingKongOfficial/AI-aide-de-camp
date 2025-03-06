@@ -2,3 +2,4 @@
 /ai_aide_de_camp/intent_detection/sentence_bert/checkpoints/
 .venv/
 .idea/
+/ai_aide_de_camp/rag/milvus_docker/
